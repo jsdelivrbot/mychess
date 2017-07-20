@@ -4,14 +4,14 @@
 			var app  = express();
 			
 			app.set('view engine', 'ejs');
-
+				 var port = process.env.PORT || 8080;
 			var upload=require('express-fileupload');
 			var nodemailer=require('nodemailer');
 			var http=require('http').Server(app);
 			var io=require('socket.io')(http);
 			app.use(upload()); //for file upload -- html form file upload imp
 			app.use('/public', express.static('vendors'));  // for static js ,css, image file path --use public/
-			http.listen(3000);
+			http.listen(port);
 
 			app.get('/',function(req,res){
 				res.render('index');
