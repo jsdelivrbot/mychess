@@ -1,0 +1,181 @@
+<html>
+<head>
+<title>chess</title>
+<link rel="stylesheet" type="text/css" href="public/chessboardjs/css/chessboard-0.3.0.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+<script src="public/chessboardjs/js/chessboard-0.3.0.min.js"></script>
+<script src="public/chessboardjs/js/chess.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.1/socket.io.js"></script>
+<script>
+$(window).bind('beforeunload',function(){
+   var pageURL = document.location.origin;
+     // so that socket can  not create new session
+    //return 'You may loose game, if you refresh the page!!';
+    window.open(pageURL,"_self");
+});
+function makeroomid() {
+  var text = "";
+  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+  for (var i = 0; i < 5; i++)
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+  return text;
+}
+var room=makeroomid();
+var initGame = function () {
+      var pageURL = document.location.origin;
+      var username=$('#player1').val();
+       var socket = io.connect(pageURL);
+      if($('#exist_room').length)         // use this if you are using id to check
+      {
+            var existroom=$('#exist_room').val();
+              $("#room").html(existroom);
+            socket.emit('joinuser',username,existroom);   //<-- it will create new room and server
+
+      }
+      else
+      { 
+        
+        //alert('make room new:'+room);
+
+          $("#room").html(room);
+          var color=$("#color").val();
+          // create new room
+         socket.emit('newuser',username,room,color);   //<-- it will create new room and server
+      }
+       var board,
+    game = new Chess(),
+    statusEl = $('#status');
+  //  fenEl = $('#fen'),
+   // pgnEl = $('#pgn');
+   
+  var onDragStart = function(source, piece, position, orientation) {
+    //  console.log("Drag started:");
+    // console.log("Source: " + source);
+    // console.log("Piece: " + piece);
+    // console.log("Position: " + ChessBoard.objToFen(position));
+    // console.log("Orientation: " + orientation);
+    // console.log("--------------------");
+    //alert(orientation);
+    if ((orientation === 'white' && piece.search(/^w/) === -1) ||
+    (orientation === 'black' && piece.search(/^b/) === -1)) 
+    {
+      return false;
+    }
+   
+  };
+var onDrop = function(source, target) {
+     var move = game.move({
+    from: source,
+    to: target,
+    promotion: 'q' // NOTE: always promote to a queen for example simplicity
+  });
+    
+     if (move === null) {
+          return 'snapback';
+        }
+       
+        //alert(game.turn());
+       socket.emit('move', username,room,move);
+        updateStatus();
+}
+var updateStatus = function() {
+  var status = '';
+
+  var moveColor = 'White';
+  if (game.turn() === 'b') {
+    moveColor = 'Black';
+  }
+
+  // checkmate?
+  if (game.in_checkmate() === true) {
+    status = 'Game over, ' + moveColor + ' is in checkmate.';
+  }
+
+  // draw?
+  else if (game.in_draw() === true) {
+    status = 'Game over, drawn position';
+  }
+
+  // game still on
+  else {
+    status = moveColor + ' to move';
+
+    // check?
+    if (game.in_check() === true) {
+      status += ', ' + moveColor + ' is in check';
+    }
+  }
+
+  statusEl.html(status);
+  console.log(game);
+ // fenEl.html(game.fen());
+ // pgnEl.html(game.pgn());
+};
+
+
+  var cfg = {
+    draggable: true,
+    position: 'start',
+    onDrop: onDrop,
+    onDragStart: onDragStart
+   
+  };
+  board = ChessBoard('gameBoard', cfg);
+  //if(username=='monu')
+  if($('#color').length)
+  {
+       var c=$('#color').val();
+        board.orientation(c);  //player1
+  }
+  else
+  {
+    board.orientation('black'); //player 2  
+  }
+// called when the server calls socket.broadcast('move')
+socket.on('move', function (sendername,msg) {
+    //console.log(JSON.stringify(msg));
+    game.move(msg);
+    board.position(game.fen()); // fen is the board layout
+});
+
+socket.on('showmsg',function(user){
+  // console.log(JSON.stringify(user));
+   $('#broadcast').append('<p style="color:green">'+user+' joined</p>');
+   //setTimeout(function(){ $('#broadcast').html(''); }, 3000);
+  
+});
+  socket.on('leave_this_user',function(user)
+  {
+       $('#errormsg').html('<p style="color:crimson">Unable to join '+user+'</p>');
+
+  });
+
+};
+
+$(document).ready(initGame);
+
+</script>
+</head>
+<body>
+<h3> GAME: <STRONG id="room" style="color: black;font-size: 14px"></STRONG></h3>
+<input type="hidden" id="player1" value="<%= user %>">
+<% if(locals.color) { %>
+<input type="hidden" id="color" value="<%= color %>">
+<% } else if(locals.existroom) { %>
+<input type="hidden" id="exist_room" value="<%= existroom %>">
+<% } %>
+
+<div id="broadcast"></div>
+<div id="errormsg"></div>
+<h3><%= user %> - <% if(locals.color) { %><%= color %><% } %></h3>
+<div id="gameBoard" style="width: 400px"></div>
+
+<p>Status: <span id="status"></span></p>
+<!--<p>FEN: <span id="fen"></span></p>
+<p>PGN: <span id="pgn"></span></p>-->
+
+
+</body>
+</html>

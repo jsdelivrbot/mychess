@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>HOME</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script type="text/javascript">
+    
+    $("document").ready(function(){
+
+      $("#user1").change(function(){
+        var user1=$("#user1").val();
+      
+
+      });
+    });
+  </script>
+</head>
+<body>
+
+  <div class="row">
+
+ 	<div class="col-md-2"> </div>
+    <div class="col-md-4" style=" border: 1px solid gray;padding: 10px 5px 5px 30px;">
+  <form action="/start_newgame" method="POST" enctype="multipart/form-data">
+    <div class="chat_div">
+     <h4>Start a New Game</h4>
+      <div class="form-group">
+        <input type='text' class="form-control" name="username" id="user1" style="width:60%" placeholder="Player1" required>
+      </div>
+        <div class="form-group">
+        Your Chess pieces color is:  <select name="color" readonly>
+            <option value="white">white</option>
+            <option value="black">black</option>
+          </select>
+      </div>
+  
+      <button type="submit" class="btn btn-success btn-xs" name="submit">Submit</button>
+      </div>
+    </form>
+    </div>
+ 	<div class="col-md-4" style=" border: 1px solid gray;padding: 10px 5px 5px 30px;">
+  <form action="/join_game" method="POST" enctype="multipart/form-data">
+	 	<div class="chat_div">
+	     <h4>Join an Existing Game</h4>
+      <div class="form-group">
+       
+        <input type='text' class="form-control" name="username" id="user" style="width:60%" placeholder="Player 2" required>
+         
+      </div>
+	      <div class="form-group">
+        
+        <input type='text' class="form-control" name="room" id="room" style="width:60%" value="" placeholder=" game id" required >
+         
+      </div>
+  
+	    <button type="submit" class="btn btn-success btn-xs" name="submit">Submit</button>
+	    </div>
+    </form>
+    </div>
+
+    <div class="col-md-2">
+    </div>
+
+    </div>
+
+  
+</body>
+</html> 
