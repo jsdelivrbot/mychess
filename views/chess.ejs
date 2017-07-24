@@ -9,8 +9,6 @@
 <script>
 $(window).bind('beforeunload',function(){
    var pageURL = document.location.origin;
-     // so that socket can  not create new session
-    //return 'You may loose game, if you refresh the page!!';
     window.open(pageURL,"_self");
 });
 function makeroomid() {
@@ -44,12 +42,26 @@ var initGame = function () {
           // create new room
          socket.emit('newuser',username,room,color);   //<-- it will create new room and server
       }
-       var board,
-    game = new Chess(),
-    statusEl = $('#status');
+     var board,
+  game = new Chess(),
+  statusEl = $('#status');
   //  fenEl = $('#fen'),
    // pgnEl = $('#pgn');
-   
+   var removeGreySquares = function() {
+      $('#gameBoard .square-55d63').css('background', '');
+    };
+
+  var greySquare = function(square) {
+      var squareEl = $('#gameBoard .square-' + square);
+      
+      var background = '#a9a9a9';
+      if (squareEl.hasClass('black-3c85d') === true) {
+        background = '#696969';
+      }
+
+      squareEl.css('background', background);
+  };
+
   var onDragStart = function(source, piece, position, orientation) {
     //  console.log("Drag started:");
     // console.log("Source: " + source);
@@ -66,6 +78,7 @@ var initGame = function () {
    
   };
 var onDrop = function(source, target) {
+
      var move = game.move({
     from: source,
     to: target,
@@ -107,11 +120,39 @@ var updateStatus = function() {
       status += ', ' + moveColor + ' is in check';
     }
   }
-
-  statusEl.html(status);
-  console.log(game);
+socket.emit('move_status', username,room,status);
+  //statusEl.html(status);
+  //console.log(game);
  // fenEl.html(game.fen());
  // pgnEl.html(game.pgn());
+};
+var onMouseoverSquare = function(square, piece) {
+  // get list of possible moves for this square
+  var moves = game.moves({
+    square: square,
+    verbose: true
+  });
+
+
+  // exit if there are no moves available for this square
+  if (moves.length === 0) return;
+
+  // highlight the square they moused over
+  greySquare(square);
+
+  // highlight the possible squares for this piece
+  for (var i = 0; i < moves.length; i++) {
+    greySquare(moves[i].to);
+     console.log(moves[i].to);
+  }
+};
+
+var onMouseoutSquare = function(square, piece) {
+  removeGreySquares();
+};
+
+var onSnapEnd = function() {
+  board.position(game.fen());
 };
 
 
@@ -119,7 +160,10 @@ var updateStatus = function() {
     draggable: true,
     position: 'start',
     onDrop: onDrop,
-    onDragStart: onDragStart
+    onDragStart: onDragStart,
+    onMouseoutSquare: onMouseoutSquare,
+    onMouseoverSquare: onMouseoverSquare,
+    onSnapEnd: onSnapEnd
    
   };
   board = ChessBoard('gameBoard', cfg);
@@ -140,6 +184,9 @@ socket.on('move', function (sendername,msg) {
     board.position(game.fen()); // fen is the board layout
 });
 
+socket.on('show_move_status',function(username,status){
+    statusEl.html(status);
+});
 socket.on('showmsg',function(user){
   // console.log(JSON.stringify(user));
    $('#broadcast').append('<p style="color:green">'+user+' joined</p>');
