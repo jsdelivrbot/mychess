@@ -4,7 +4,7 @@
 			var app  = express();
 			
 			app.set('view engine', 'ejs');
-				 var port = process.env.PORT || 8080;
+			 var port = process.env.PORT || 8080;
 			var upload=require('express-fileupload');
 			var nodemailer=require('nodemailer');
 			var http=require('http').Server(app);
@@ -40,18 +40,15 @@
 							socket.username=username;
 							socket.myroom=room;
 							socket.mycolor=color;
-
 							var num=io.sockets.adapter.rooms[socket.myroom].length;
 							//console.log(num);	
 							if((num>2))
 							 {
-							 		io.to(socket.myroom).emit('leave_this_user',username);
+							 	io.to(socket.myroom).emit('leave_this_user',username);
 							 }
 							 else
 							 {
-
 								console.log(io.sockets.adapter.rooms);
-
 								io.to(socket.myroom).emit('showmsg',socket.username);
 							}
 							
@@ -72,7 +69,6 @@
 								// i am 2nd player
 								console.log(io.sockets.adapter.rooms[socket.myroom]);
 								//console.log('num:'+io.sockets.adapter.rooms[socket.myroom].length);
-								
 								io.to(socket.myroom).emit('showmsg',socket.username);
 							}
 							
@@ -82,6 +78,10 @@
 					console.log('move:'+msg);
 					console.log('move user:'+socket.username);
 				    io.to(socket.myroom).emit('move',socket.username,msg);
+				});
+				socket.on('move_status',function(username,room,status){
+					console.log('next move'+status);
+					 io.to(socket.myroom).emit('show_move_status',socket.username,status);
 				});
 				socket.on('disconnect', function(){
 		 	 		console.log(' disconnected');
